@@ -1,0 +1,25 @@
+version: '2'
+services:
+  vpn:
+    build:
+      context: vpn
+    volumes:
+      - ./vpn:/vpn:ro
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    command: --config /vpn/jetbrains-vsphere-lab.ovpn --tls-auth /vpn/client.ovpn --script-security 2 --auth-user-pass /vpn/creds.ovpn
+    dns: 10.0.0.1
+
+  sh:
+    image: debian
+    network_mode: "service:vpn"
+
+  test:
+    image: jetbrainsinfra/golang:1.8.3
+    network_mode: "service:vpn"
+    volumes:
+      - .:/go/src/github.com/jetbrains-infra/packer-builder-vsphere
+    working_dir: /go/src/github.com/jetbrains-infra/packer-builder-vsphere
+    command: ./test.sh
